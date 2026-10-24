@@ -1,13 +1,42 @@
+
+# Environment variables and secrets
 .env
-.vscode
+.env.*
+!.env.example
 
-
-*.pyc
-.DS_Store
-__pycache__/
-
+# Virtual environments
 venv/
+.venv/
+env/
 
-.streamlit/
+# IDE settings
+.vscode/
+.idea/
 
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Operating system
+.DS_Store
+Thumbs.db
+
+# Build files
 dist/
+build/
+*.egg-info/
+
+# Streamlit local configuration and secrets
+.streamlit/secrets.toml
+
+# Local databases
+*.db
+*.sqlite
+*.sqlite3
+
+# Large model files
+*.pt
+*.pth
+*.onnx
+*.h5

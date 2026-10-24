@@ -1,0 +1,23 @@
+streamlit
+numpy
+pandas
+setuptools
+
+# Face recognition
+face-recognition
+git+https://github.com/ageitgey/face_recognition_models.git
+
+# Database and authentication
+supabase
+bcrypt
+
+# QR code and images
+segno
+Pillow
+
+# Voice recognition
+librosa
+resemblyzer
+
+
+
