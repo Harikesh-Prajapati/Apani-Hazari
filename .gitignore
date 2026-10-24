@@ -1,0 +1,45 @@
+# .venv/
+# venv/
+# **/.venv/
+# __pycache__/
+# *.pyc
+# .env
+# .streamlit/secrets.toml
+
+
+# Python virtual environments
+Intelligent_AI_Attendence/.venv/
+Intelligent_AI_Attendence/venv/
+.venv/
+venv/
+env/
+
+# Python cache
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# IDE files
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Local databases
+*.db
+*.sqlite
+*.sqlite3
+
+# Large model files
+*.pt
+*.pth
+*.onnx
+*.h5
+*.dat
