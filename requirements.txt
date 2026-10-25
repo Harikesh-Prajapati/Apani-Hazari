@@ -1,7 +1,10 @@
+--extra-index-url https://download.pytorch.org/whl/cpu
+
 streamlit
 numpy
 pandas
 setuptools
+scikit-learn
 
 # Face recognition
 face-recognition
@@ -18,6 +21,3 @@ Pillow
 # Voice recognition
 librosa
 resemblyzer
-
-
-
