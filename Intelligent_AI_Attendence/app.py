@@ -1,45 +1,15 @@
 import importlib
-import importlib.util
 import traceback
-import sys
-import glob
-from importlib import metadata
 
 import streamlit as st
 
+# Must be the first Streamlit command, so it runs before the app's own imports.
 st.set_page_config(
     page_title="Apani Hazari - Making Attendance Faster Using AI",
-    page_icon="🎓",
+    page_icon="https://cdn-icons-png.magnific.com/256/18492/18492086.png",
 )
 
-# Diagnose Supabase before importing application screens.
-st.subheader("Supabase Dependency Diagnostic")
-st.write("Python:", sys.executable, sys.version)
-
-try:
-    st.write("Supabase version:", metadata.version("supabase"))
-except Exception as e:
-    st.write("Supabase metadata:", repr(e))
-
-try:
-    st.write("Supabase module:", importlib.util.find_spec("supabase"))
-except Exception as e:
-    st.write("Module lookup error:", repr(e))
-
-st.write(
-    "Supabase files:",
-    glob.glob(f"{sys.prefix}/lib/python*/site-packages/supabase*"),
-)
-
-try:
-    from supabase import create_client, Client
-    st.success("Supabase import successful!")
-except Exception:
-    st.error("Supabase import failed:")
-    st.code(traceback.format_exc())
-    st.stop()
-
-# Load application screens only after Supabase is verified.
+# Show the real error on the page if an import fails (Streamlit Cloud hides it).
 try:
     importlib.invalidate_caches()
     from src.screens.home_screen import home_screen
@@ -47,9 +17,72 @@ try:
     from src.screens.teacher_screen import teacher_screen
     from src.screens.components.dialog_auto_enroll import auto_enroll_dialog
 except Exception:
-    st.error("Application screen import failed:")
+    import glob
+    import importlib.util
+    import sys
+    from importlib import metadata
+
+    st.error("The app failed to start. Details:")
     st.code(traceback.format_exc())
+
+    st.write("Python:", sys.executable, sys.version)
+    try:
+        st.write("supabase version:", metadata.version("supabase"))
+    except Exception as e:
+        st.write("supabase metadata:", repr(e))
+    try:
+        st.write("find_spec:", str(importlib.util.find_spec("supabase")))
+    except Exception as e:
+        st.write("find_spec error:", repr(e))
+    st.write(
+        "site-packages matches:",
+        glob.glob(f"{sys.prefix}/lib/python*/site-packages/supabase*"),
+    )
+    st.write("sys.path:", sys.path)
     st.stop()
+
+
+def main():
+    # Initialize session state.
+    if "login_type" not in st.session_state:
+        st.session_state["login_type"] = None
+
+    # Read a student invitation code from the URL, then remove it from the URL
+    # so the dialog doesn't reopen on every rerun.
+    join_code = st.query_params.get("join-code")
+
+    if join_code:
+        st.session_state["pending_join_code"] = join_code
+        del st.query_params["join-code"]
+
+        if st.session_state.get("login_type") != "student":
+            st.session_state["login_type"] = "student"
+            st.rerun()
+
+    # Route to the appropriate screen.
+    login_type = st.session_state.get("login_type")
+
+    if login_type == "teacher":
+        teacher_screen()
+    elif login_type == "student":
+        student_screen()
+    else:
+        home_screen()
+
+    # Enroll the student after successful login.
+    pending_code = st.session_state.get("pending_join_code")
+
+    if (
+        pending_code
+        and st.session_state.get("is_logged_in")
+        and st.session_state.get("user_role") == "student"
+    ):
+        auto_enroll_dialog(pending_code)
+
+
+if __name__ == "__main__":
+    main()
+
 
 
 
