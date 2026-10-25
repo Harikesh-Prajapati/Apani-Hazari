@@ -1,3 +1,4 @@
+import importlib
 import traceback
 
 import streamlit as st
@@ -10,13 +11,34 @@ st.set_page_config(
 
 # Show the real error on the page if an import fails (Streamlit Cloud hides it).
 try:
+    importlib.invalidate_caches()
     from src.screens.home_screen import home_screen
     from src.screens.student_screen import student_screen
     from src.screens.teacher_screen import teacher_screen
     from src.screens.components.dialog_auto_enroll import auto_enroll_dialog
 except Exception:
+    import glob
+    import importlib.util
+    import sys
+    from importlib import metadata
+
     st.error("The app failed to start. Details:")
     st.code(traceback.format_exc())
+
+    st.write("Python:", sys.executable, sys.version)
+    try:
+        st.write("supabase version:", metadata.version("supabase"))
+    except Exception as e:
+        st.write("supabase metadata:", repr(e))
+    try:
+        st.write("find_spec:", str(importlib.util.find_spec("supabase")))
+    except Exception as e:
+        st.write("find_spec error:", repr(e))
+    st.write(
+        "site-packages matches:",
+        glob.glob(f"{sys.prefix}/lib/python*/site-packages/supabase*"),
+    )
+    st.write("sys.path:", sys.path)
     st.stop()
 
 
