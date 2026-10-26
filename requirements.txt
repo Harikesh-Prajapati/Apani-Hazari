@@ -3,8 +3,8 @@
 streamlit
 numpy
 pandas
-setuptools
 scikit-learn
+setuptools<81
 
 # Face recognition
 face-recognition
