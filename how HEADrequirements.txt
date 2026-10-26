@@ -1,0 +1,23 @@
+--extra-index-url https://download.pytorch.org/whl/cpu
+
+streamlit
+numpy
+pandas
+setuptools
+scikit-learn
+
+# Face recognition
+face-recognition
+git+https://github.com/ageitgey/face_recognition_models.git
+
+# Database and authentication
+supabase
+bcrypt
+
+# QR code and images
+segno
+Pillow
+
+# Voice recognition
+librosa
+resemblyzer

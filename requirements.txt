@@ -6,8 +6,8 @@ pandas
 scikit-learn
 setuptools<81
 
-# Face recognition
-face-recognition
+# Face recognition (prebuilt, no compiling)
+dlib-bin
 git+https://github.com/ageitgey/face_recognition_models.git
 
 # Database and authentication
