@@ -7,10 +7,6 @@ Apani Hazari is an AI-powered attendance management system that uses face recogn
 
 **🚀 Live Demo:** [apani-hazari.streamlit.app](https://apani-hazari.streamlit.app)
 
-<p align="center">
-  <img src="screenshots/home.png" alt="Apani Hazari home screen" width="900">
-</p>
-
 ## ✨ Features
 
 ### 👨‍🏫 Teacher Portal
