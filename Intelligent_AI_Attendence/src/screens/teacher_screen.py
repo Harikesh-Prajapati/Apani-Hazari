@@ -1,6 +1,6 @@
 import time
 from html import escape
-from datetime import datetime
+from datetime import datetime, timezone
 
 import numpy as np
 import pandas as pd
@@ -35,13 +35,11 @@ from PIPELINE.face_pipeline import predict_attendance
 
 
 def style_teacher_screen():
-    """Inter font for the title/headings and black headings + input labels."""
     st.markdown(
         """
         <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
-        /* ---------- Inter font: "Apani Hazari" title, headings, labels ---------- */
         [data-testid="stMarkdownContainer"] *:not([data-testid="stIconMaterial"]),
         [data-testid="stHtml"] *,
         [data-testid="stHeading"],
@@ -52,7 +50,6 @@ def style_teacher_screen():
             font-family: 'Inter', sans-serif !important;
         }
 
-        /* "Apani Hazari" title: heavy Inter with tight line spacing */
         [data-testid="stMarkdownContainer"] h1,
         [data-testid="stMarkdownContainer"] h2,
         [data-testid="stMarkdownContainer"] h3,
@@ -64,7 +61,6 @@ def style_teacher_screen():
             line-height: 1.0 !important;
         }
 
-        /* ---------- Black headings: "Login using password", etc. ---------- */
         [data-testid="stHeading"],
         [data-testid="stHeading"] * {
             color: #000000 !important;
@@ -72,7 +68,6 @@ def style_teacher_screen():
             letter-spacing: -0.5px !important;
         }
 
-        /* ---------- Black input labels: "Enter username", "Enter password" ---------- */
         [data-testid="stWidgetLabel"],
         [data-testid="stWidgetLabel"] *,
         label,
@@ -81,7 +76,6 @@ def style_teacher_screen():
             font-weight: 600 !important;
         }
 
-        /* ---------- Metrics (Total classes held, Attended, ...) in black ---------- */
         [data-testid="stMetricLabel"],
         [data-testid="stMetricLabel"] *,
         [data-testid="stMetricValue"],
@@ -90,7 +84,6 @@ def style_teacher_screen():
             font-family: 'Inter', sans-serif !important;
         }
 
-        /* ---------- Photo captions ("Photo 1", "Photo 2") in black ---------- */
         [data-testid="stImageCaption"],
         [data-testid="stImageCaption"] *,
         [data-testid="stCaptionContainer"],
@@ -100,7 +93,6 @@ def style_teacher_screen():
             font-weight: 600 !important;
         }
 
-        /* ---------- Dialogs (dark background): keep headings/labels white ---------- */
         [data-testid="stDialog"] [data-testid="stHeading"],
         [data-testid="stDialog"] [data-testid="stHeading"] *,
         [data-testid="stDialog"] [data-testid="stWidgetLabel"],
@@ -193,7 +185,7 @@ def teacher_tab_take_attendance():
     subjects = get_teacher_subjects(teacher_id)
 
     if not subjects:
-        st.warning('You havent created any subjects yet! Please create one to begin!')
+        st.warning("You haven't created any subjects yet. Create one to begin.")
         return
 
     subject_options = {f"{s['name']} - {s['subject_code']}": s['subject_id'] for s in subjects}
@@ -229,7 +221,7 @@ def teacher_tab_take_attendance():
     with c2:
 
         if st.button('Run Face Analysis', width='stretch', type='secondary', icon=':material/analytics:', disabled=not has_photos):
-            with st.spinner('Deep scanning classroom photos...'):
+            with st.spinner('Analyzing photos...'):
                 all_detected_ids = {}
 
                 for idx, img in enumerate(st.session_state.attendance_images):
@@ -251,7 +243,7 @@ def teacher_tab_take_attendance():
 
                     results, attendance_to_log = [], []
 
-                    current_timestamp = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+                    current_timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S+00:00")
 
                     for node in enrolled_students:
                         student = node['students']
@@ -289,7 +281,6 @@ def teacher_tab_manage_subjects():
         if st.button('Create New Subject', width='stretch'):
             create_subject_dialog(teacher_id)
 
-    # LIST all SUBJECTS
     subjects = get_teacher_subjects(teacher_id)
     if subjects:
         for sub in subjects:
@@ -311,7 +302,7 @@ def teacher_tab_manage_subjects():
                 footer_callback=share_btn
             )
     else:
-        st.info("NO SUBJECTS FOUND. CREATE ONE ABOVE")
+        st.info("No subjects found. Create one above.")
 
 
 def _records_css():
@@ -439,7 +430,6 @@ def _records_css():
         }
         .rec-line { margin: 10px 0 2px 0; }
 
-        /* Tabs: black labels (inactive), pink (active) */
         [data-testid="stTabs"] button,
         [data-testid="stTabs"] button *,
         [data-testid="stTab"],
@@ -489,7 +479,6 @@ def _bar_html(p):
 
 
 def _cards_html(items):
-    """items: list of (label, value, color_class)."""
     out = ['<div class="rec-cards">']
     for label, value, cls in items:
         out.append(
@@ -501,7 +490,6 @@ def _cards_html(items):
 
 
 def _table_html(headers, rows):
-    """rows: list of lists of ready-made HTML strings."""
     head = "".join(f"<th>{escape(h)}</th>" for h in headers)
     body = "".join("<tr>" + "".join(f"<td>{c}</td>" for c in row) + "</tr>" for row in rows)
     return f'<div class="rec-wrap"><table class="rec-table"><thead><tr>{head}</tr></thead><tbody>{body}</tbody></table></div>'
@@ -519,7 +507,6 @@ def teacher_tab_attendance_records():
         st.info('No attendance has been taken yet.')
         return
 
-    # If the records don't include student details, look the names up.
     student_names = {}
     if any(not r.get('students') for r in records):
         try:
@@ -533,9 +520,10 @@ def teacher_tab_attendance_records():
         ts = r.get('timestamp')
         if not ts:
             continue
-        dt = pd.to_datetime(ts, errors='coerce')
+        dt = pd.to_datetime(ts, errors='coerce', utc=True)
         if pd.isna(dt):
             continue
+        dt = dt.tz_convert("Asia/Kolkata")
 
         sid = r.get('student_id')
         student = r.get('students') or {}
@@ -559,12 +547,10 @@ def teacher_tab_attendance_records():
     df = pd.DataFrame(rows)
     df["Subject Label"] = df["Subject"] + " - " + df["Subject Code"]
 
-    # ---------------- Subject picker ----------------
     subject_labels = sorted(df["Subject Label"].unique())
     selected_label = st.selectbox('Select Subject', options=subject_labels, key='records_subject')
     sdf = df[df["Subject Label"] == selected_label]
 
-    # ---------------- Classes held (one row per class session) ----------------
     classes = (
         sdf.groupby(['class_key', 'Date', 'Time'])
         .agg(Present=('is_present', 'sum'), Total=('is_present', 'count'))
@@ -575,7 +561,6 @@ def teacher_tab_attendance_records():
     classes['Class No'] = classes.index + 1
     classes['Pct'] = classes['Present'] / classes['Total'] * 100
 
-    # ---------------- Student-wise totals ----------------
     per_student = (
         sdf.groupby(['student_id', 'Student'])
         .agg(Attended=('is_present', 'sum'), Total=('is_present', 'count'))
@@ -587,7 +572,6 @@ def teacher_tab_attendance_records():
 
     avg_pct = per_student['Pct'].mean()
 
-    # ---------------- Summary cards ----------------
     st.markdown(
         _cards_html([
             ("Total classes held", len(classes), ""),
@@ -602,7 +586,6 @@ def teacher_tab_attendance_records():
         ["📅 Classes held", "👥 Student-wise", "🔎 Student details"]
     )
 
-    # ---------------- 1) All classes held ----------------
     with tab_classes:
         html_rows = []
         for _, c in classes.sort_values('class_key', ascending=False).iterrows():
@@ -618,7 +601,6 @@ def teacher_tab_attendance_records():
             unsafe_allow_html=True,
         )
 
-    # ---------------- 2) Student-wise attendance ----------------
     with tab_students:
         html_rows = []
         for _, s in per_student.iterrows():
@@ -634,7 +616,6 @@ def teacher_tab_attendance_records():
             unsafe_allow_html=True,
         )
 
-    # ---------------- 3) One student's class-by-class detail ----------------
     with tab_detail:
         student_options = {
             f"{row['Student']} (ID: {row['student_id']})": row['student_id']
@@ -743,7 +724,7 @@ def teacher_screen_login():
                 time.sleep(1)
                 st.rerun()
             else:
-                st.error("Invalid username and password combo")
+                st.error("Invalid username or password")
 
     with btnc2:
         if st.button('Register Instead', type="primary", icon=':material/passkey:', width='stretch'):
@@ -758,11 +739,11 @@ def register_teacher(teacher_username, teacher_name, teacher_pass, teacher_pass_
     if check_teacher_exists(teacher_username):
         return False, "Username already taken"
     if teacher_pass != teacher_pass_confirm:
-        return False, "Password doesn't match"
+        return False, "Passwords do not match"
 
     try:
         create_teacher(teacher_username, teacher_pass, teacher_name)
-        return True, "Sucessfully Created! Login Now"
+        return True, "Successfully created. Log in now."
     except Exception as e:
         return False, "Unexpected Error!"
 
@@ -781,9 +762,9 @@ def teacher_screen_register():
     st.space()
     st.space()
 
-    teacher_username = st.text_input("Enter username", placeholder='ananyaroy')
+    teacher_username = st.text_input("Enter username", placeholder='Harsh Prajapati')
 
-    teacher_name = st.text_input("Enter name", placeholder='Ananya Roy')
+    teacher_name = st.text_input("Enter name", placeholder='Harsh Prajapati')
 
     teacher_pass = st.text_input("Enter password", type='password', placeholder="Enter password")
 

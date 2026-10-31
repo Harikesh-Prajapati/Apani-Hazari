@@ -1,5 +1,4 @@
-
-from datetime import datetime
+from datetime import datetime, timezone
 
 import pandas as pd
 import streamlit as st
@@ -11,11 +10,15 @@ from src.screens.components.dialog_attendance_results import (
 )
 
 
+
+VOICE_THRESHOLD = 0.60
+
+
 @st.dialog("Voice Attendance")
 def voice_attendance_dialog(selected_subject_id):
     st.write(
-        "Record audio of students saying 'I am present'. "
-        "AI will try to recognize the students."
+        "Record students saying 'I am present, my name is ...' "
+        "one at a time, with a 1 second pause between students."
     )
 
     st.session_state.setdefault("voice_attendance_results", None)
@@ -61,18 +64,18 @@ def voice_attendance_dialog(selected_subject_id):
                     )
                     return
 
-                audio_bytes = audio_data.getvalue()
-
-                detected_scores = process_bulk_audio(
-                    audio_bytes,
+                detected_scores, best_raw = process_bulk_audio(
+                    audio_data.getvalue(),
                     candidates_dict,
+                    threshold=VOICE_THRESHOLD,
+                    return_debug=True,
                 )
 
                 results = []
                 attendance_to_log = []
 
-                current_timestamp = datetime.now().strftime(
-                    "%Y-%m-%dT%H:%M:%S"
+                current_timestamp = datetime.now(timezone.utc).strftime(
+                    "%Y-%m-%dT%H:%M:%S+00:00"
                 )
 
                 for node in enrolled_students:
@@ -82,16 +85,20 @@ def voice_attendance_dialog(selected_subject_id):
                         continue
 
                     student_id = student["student_id"]
-                    score = detected_scores.get(student_id, 0.0)
-                    is_present = bool(score > 0)
+                    is_present = student_id in detected_scores
+
+                    if student_id not in candidates_dict:
+                        score_text = "no voice profile"
+                    elif student_id in best_raw:
+                        score_text = f"{best_raw[student_id]:.2f}"
+                    else:
+                        score_text = "-"
 
                     results.append({
                         "Name": student.get("name", "Unknown"),
                         "ID": student_id,
-                        "Source": score if is_present else "-",
-                        "Status": (
-                            "Present" if is_present else "Absent"
-                        ),
+                        "Score": score_text,
+                        "Status": "Present" if is_present else "Absent",
                     })
 
                     attendance_to_log.append({
@@ -106,12 +113,13 @@ def voice_attendance_dialog(selected_subject_id):
                     attendance_to_log,
                 )
 
-                st.rerun()
+                
+                st.rerun(scope="fragment")
 
             except Exception as e:
                 st.error(f"Audio analysis failed: {e}")
 
-    # Review results inside the existing dialog.
+   
     saved_results = st.session_state.get("voice_attendance_results")
 
     if saved_results:
