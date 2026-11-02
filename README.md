@@ -1,11 +1,18 @@
 # Apani Hazari 🎓
+
 ### AI-Powered Smart Attendance Platform
 
 **Take attendance with a photo. Track every class with ease.**
 
 Apani Hazari is an AI-powered attendance management system that uses face recognition and voice-based attendance to simplify classroom attendance. Teachers can manage subjects and attendance records, while students can track their attendance from their dashboards.
 
-**🚀 Live Demo:** [apani-hazari.streamlit.app](https://apani-hazari.streamlit.app)
+### 🚀 Live Demo
+
+[**Launch Apani Hazari**](https://apani-hazari.streamlit.app/)
+
+### 🌐 Landing Page
+
+[**Visit Apani Hazari Landing Page**](https://apani-hazari-landing-page.vercel.app/)
 
 ## ✨ Features
 
